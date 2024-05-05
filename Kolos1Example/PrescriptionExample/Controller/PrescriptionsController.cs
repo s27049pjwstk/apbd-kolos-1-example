@@ -9,14 +9,18 @@ namespace PrescriptionExample.Controller;
 public class PrescriptionsController(IPrescriptionsService prescriptionsService) : ControllerBase {
     [HttpGet]
     public IActionResult GetPrescriptions(string? name) {
-        var data = prescriptionsService.GetPrescriptions(name);
-        if (data == null) return NotFound("No Prescriptions Found");
-        return Ok(data);
+        var result = prescriptionsService.GetPrescriptions(name);
+        if (result is null) return NotFound("No Prescriptions Found");
+        return Ok(result);
     }
 
     [HttpPost]
     public IActionResult CreatePrescription(Prescription prescription) {
-        prescriptionsService.CreatePrescription(prescription);
+        try {
+            prescriptionsService.CreatePrescription(prescription);
+        } catch (Exception e) {
+            return StatusCode(StatusCodes.Status400BadRequest);
+        }
         return StatusCode(StatusCodes.Status201Created);
     }
 }

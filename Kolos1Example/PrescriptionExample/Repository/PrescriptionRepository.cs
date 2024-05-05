@@ -4,8 +4,7 @@ using PrescriptionExample.Model;
 namespace PrescriptionExample.Repository;
 
 public class PrescriptionRepository(IConfiguration configuration) : IPrescriptionRepository {
-
-    public IEnumerable<PrescriptionView> GetPrescriptions(string? name) {
+    public IEnumerable<PrescriptionView> GetPrescriptionsWithLastNames(string? name) {
         using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
         con.Open();
 
@@ -41,13 +40,29 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
         using var cmd = new SqlCommand();
         cmd.Connection = con;
         cmd.CommandText =
-            "INSERT INTO Student(Date, DueDate, IdPatient,IdDoctor) VALUES(@Date, @DueDate, @IdPatient, @IdDoctor)";
-        cmd.Parameters.AddWithValue("@Date", prescription.Date);
-        cmd.Parameters.AddWithValue("@DueDate", prescription.DueDate);
+            "INSERT INTO Prescription(Date, DueDate, IdPatient,IdDoctor) VALUES(@Date, @DueDate, @IdPatient, @IdDoctor)";
+        cmd.Parameters.AddWithValue("@Date", $"\'{prescription.Date}\'");
+        cmd.Parameters.AddWithValue("@DueDate", $"\'{prescription.DueDate}\'");
         cmd.Parameters.AddWithValue("@IdPatient", prescription.IdPatient);
         cmd.Parameters.AddWithValue("@IdDoctor", prescription.IdDoctor);
 
         var affectedCount = cmd.ExecuteNonQuery();
         return affectedCount;
+    }
+
+    private readonly string[] _tables = ["Doctor", "Patient"];
+
+    public string GetLastName(int id, string table) {
+        using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+        con.Open();
+
+        using var cmd = new SqlCommand();
+        cmd.Connection = con;
+        if (!_tables.Contains(table)) return null;
+        cmd.CommandText = $"select LastName from {table} where IdDoctor = @id";
+        cmd.Parameters.AddWithValue("@id", id);
+
+        var dr = cmd.ExecuteReader();
+        return !dr.Read() ? null : dr["LastName"].ToString();
     }
 }
