@@ -6,15 +6,15 @@ using PrescriptionExample.Repository;
 namespace PrescriptionExample.Service;
 
 public class PrescriptionService(IPrescriptionRepository prescriptionRepository) : IPrescriptionsService {
-    public IEnumerable<PrescriptionView> GetPrescriptions(string? name) {
-        return prescriptionRepository.GetPrescriptionsWithLastNames(name);
+    public async Task<IEnumerable<PrescriptionView>> GetPrescriptionsAsync(string? name) {
+        return await prescriptionRepository.GetPrescriptionsWithLastNamesAsync(name);
     }
 
-    public int CreatePrescription(Prescription prescription) {
+    public async Task<int> CreatePrescriptionAsync(Prescription prescription) {
         if ((DateTime.Parse(prescription.Date) < DateTime.Parse(prescription.DueDate)) &&
-            prescriptionRepository.GetLastName(prescription.IdDoctor, "Doctor") is not null &&
-            prescriptionRepository.GetLastName(prescription.IdPatient, "Patient") is not null) {
-            return prescriptionRepository.CreatePrescription(prescription);
+            await prescriptionRepository.GetLastNameAsync(prescription.IdDoctor, "Doctor") is not null &&
+            await prescriptionRepository.GetLastNameAsync(prescription.IdPatient, "Patient") is not null) {
+            return await prescriptionRepository.CreatePrescriptionAsync(prescription);
         }
         throw new SyntaxErrorException();
     }

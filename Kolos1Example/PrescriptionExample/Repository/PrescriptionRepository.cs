@@ -4,11 +4,11 @@ using PrescriptionExample.Model;
 namespace PrescriptionExample.Repository;
 
 public class PrescriptionRepository(IConfiguration configuration) : IPrescriptionRepository {
-    public IEnumerable<PrescriptionView> GetPrescriptionsWithLastNames(string? name) {
-        using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
-        con.Open();
+    public async Task<IEnumerable<PrescriptionView>> GetPrescriptionsWithLastNamesAsync(string? name) {
+        await using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+        await con.OpenAsync();
 
-        using var cmd = new SqlCommand();
+        await using var cmd = new SqlCommand();
         cmd.Connection = con;
         cmd.CommandText = "SELECT IdPrescription, Date, DueDate, P.LastName, D.LastName FROM Prescription " +
                           "LEFT JOIN s27049.Patient P on P.IdPatient = Prescription.IdPatient " +
@@ -18,9 +18,9 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
         if (!string.IsNullOrEmpty(name)) cmd.Parameters.AddWithValue("@Name", name);
 
 
-        var dr = cmd.ExecuteReader();
+        var dr = await cmd.ExecuteReaderAsync();
         var prescriptions = new List<PrescriptionView>();
-        while (dr.Read()) {
+        while (await dr.ReadAsync()) {
             var prescription = new PrescriptionView {
                 Date = dr["Date"].ToString(),
                 DueDate = dr["DueDate"].ToString(),
@@ -33,11 +33,11 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
         return prescriptions;
     }
 
-    public int CreatePrescription(Prescription prescription) {
-        using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
-        con.Open();
+    public async Task<int> CreatePrescriptionAsync(Prescription prescription) {
+        await using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+        await con.OpenAsync();
 
-        using var cmd = new SqlCommand();
+        await using var cmd = new SqlCommand();
         cmd.Connection = con;
         cmd.CommandText =
             "INSERT INTO Prescription(Date, DueDate, IdPatient,IdDoctor) VALUES(@Date, @DueDate, @IdPatient, @IdDoctor)";
@@ -46,23 +46,23 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
         cmd.Parameters.AddWithValue("@IdPatient", prescription.IdPatient);
         cmd.Parameters.AddWithValue("@IdDoctor", prescription.IdDoctor);
 
-        var affectedCount = cmd.ExecuteNonQuery();
+        var affectedCount = await cmd.ExecuteNonQueryAsync();
         return affectedCount;
     }
 
     private readonly string[] _tables = ["Doctor", "Patient"];
 
-    public string GetLastName(int id, string table) {
-        using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
-        con.Open();
+    public async Task<string?> GetLastNameAsync(int id, string table) {
+        await using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+        await con.OpenAsync();
 
-        using var cmd = new SqlCommand();
+        await using var cmd = new SqlCommand();
         cmd.Connection = con;
         if (!_tables.Contains(table)) return null;
         cmd.CommandText = $"select LastName from {table} where IdDoctor = @id";
         cmd.Parameters.AddWithValue("@id", id);
 
-        var dr = cmd.ExecuteReader();
-        return !dr.Read() ? null : dr["LastName"].ToString();
+        var dr = await cmd.ExecuteReaderAsync();
+        return !await dr.ReadAsync() ? null : dr["LastName"].ToString();
     }
 }

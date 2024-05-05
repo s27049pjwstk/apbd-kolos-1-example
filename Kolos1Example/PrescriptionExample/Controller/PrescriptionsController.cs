@@ -8,19 +8,20 @@ namespace PrescriptionExample.Controller;
 [ApiController]
 public class PrescriptionsController(IPrescriptionsService prescriptionsService) : ControllerBase {
     [HttpGet]
-    public IActionResult GetPrescriptions(string? name) {
-        var result = prescriptionsService.GetPrescriptions(name);
+    public async Task<IActionResult> GetPrescriptionsAsync(string? name) {
+        var result = await prescriptionsService.GetPrescriptionsAsync(name);
         if (result is null) return NotFound("No Prescriptions Found");
         return Ok(result);
     }
 
     [HttpPost]
-    public IActionResult CreatePrescription(Prescription prescription) {
+    public async Task<IActionResult> CreatePrescriptionAsync(Prescription prescription) {
         try {
-            prescriptionsService.CreatePrescription(prescription);
+            await prescriptionsService.CreatePrescriptionAsync(prescription);
         } catch (Exception e) {
             return StatusCode(StatusCodes.Status400BadRequest);
         }
+
         return StatusCode(StatusCodes.Status201Created);
     }
 }

@@ -3,7 +3,7 @@
 namespace PrescriptionExample.Repository;
 
 public interface IPrescriptionRepository {
-    IEnumerable<PrescriptionView> GetPrescriptionsWithLastNames(string? name);
-    int CreatePrescription(Prescription prescription);
-    public string? GetLastName(int id, string table);
+    Task<IEnumerable<PrescriptionView>> GetPrescriptionsWithLastNamesAsync(string? name);
+    Task<int> CreatePrescriptionAsync(Prescription prescription);
+    public Task<string?> GetLastNameAsync(int id, string table);
 }

@@ -3,6 +3,6 @@
 namespace PrescriptionExample.Service;
 
 public interface IPrescriptionsService {
-    IEnumerable<PrescriptionView>? GetPrescriptions(string? name);
-    int CreatePrescription(Prescription prescription);
+    Task<IEnumerable<PrescriptionView>> GetPrescriptionsAsync(string? name);
+    Task<int> CreatePrescriptionAsync(Prescription prescription);
 }
