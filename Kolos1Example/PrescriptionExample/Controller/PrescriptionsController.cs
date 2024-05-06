@@ -26,7 +26,16 @@ public class PrescriptionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreatePrescriptionAsync(Prescription prescription)
     {
-        await _prescriptionsService.CreatePrescriptionAsync(prescription);
+        try
+        {
+            await _prescriptionsService.CreatePrescriptionAsync(prescription);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e.Message);
+            return StatusCode(StatusCodes.Status400BadRequest);
+        }
+
         return StatusCode(StatusCodes.Status201Created);
     }
 }

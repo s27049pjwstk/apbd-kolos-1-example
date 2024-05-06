@@ -14,18 +14,19 @@ public class PrescriptionService : IPrescriptionsService
         _prescriptionRepository = prescriptionRepository;
     }
 
-    public async Task<IEnumerable<PrescriptionView>> GetPrescriptionsAsync(string? name) {
+    public async Task<IEnumerable<PrescriptionView>> GetPrescriptionsAsync(string? name)
+    {
         return await _prescriptionRepository.GetPrescriptionsWithLastNamesAsync(name);
     }
 
-    public async Task<int> CreatePrescriptionAsync(Prescription prescription) {
-        // if ((DateTime.Parse(prescription.Date) < DateTime.Parse(prescription.DueDate)) &&
-        //     await _prescriptionRepository.GetLastNameAsync(prescription.IdDoctor, "Doctor") is not null &&
-        //     await _prescriptionRepository.GetLastNameAsync(prescription.IdPatient, "Patient") is not null) {
-        //     return await _prescriptionRepository.CreatePrescriptionAsync(prescription);
-        // }
-        //fixme debug
-        return await _prescriptionRepository.CreatePrescriptionAsync(prescription);
+    public async Task<int> CreatePrescriptionAsync(Prescription prescription)
+    {
+        if (prescription.Date < prescription.DueDate &&
+            await _prescriptionRepository.GetLastNameAsync(prescription.IdDoctor, "Doctor") is not null &&
+            await _prescriptionRepository.GetLastNameAsync(prescription.IdPatient, "Patient") is not null)
+        {
+            return await _prescriptionRepository.CreatePrescriptionAsync(prescription);
+        }
 
         throw new SyntaxErrorException();
     }

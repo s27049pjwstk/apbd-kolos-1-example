@@ -25,11 +25,12 @@ public class PrescriptionRepository : IPrescriptionRepository
 
         await using var cmd = new SqlCommand();
         cmd.Connection = con;
-        cmd.CommandText = "SELECT IdPrescription, Date, DueDate, P.LastName as PatientLastName, D.LastName as DoctorLastName FROM Prescription " +
-                          "LEFT JOIN s27049.Patient P on P.IdPatient = Prescription.IdPatient " +
-                          "LEFT JOIN s27049.Doctor D on D.IdDoctor = Prescription.IdDoctor " +
-                          (string.IsNullOrEmpty(name) ? "" : "WHERE D.LastName = @Name ") +
-                          "ORDER BY Date DESC ";
+        cmd.CommandText =
+            "SELECT IdPrescription, Date, DueDate, P.LastName as PatientLastName, D.LastName as DoctorLastName FROM Prescription " +
+            "LEFT JOIN s27049.Patient P on P.IdPatient = Prescription.IdPatient " +
+            "LEFT JOIN s27049.Doctor D on D.IdDoctor = Prescription.IdDoctor " +
+            (string.IsNullOrEmpty(name) ? "" : "WHERE D.LastName = @Name ") +
+            "ORDER BY Date DESC ";
         if (!string.IsNullOrEmpty(name)) cmd.Parameters.AddWithValue("@Name", name);
 
 
@@ -59,8 +60,8 @@ public class PrescriptionRepository : IPrescriptionRepository
         cmd.Connection = con;
         cmd.CommandText =
             "INSERT INTO Prescription(Date, DueDate, IdPatient,IdDoctor) VALUES(@Date, @DueDate, @IdPatient, @IdDoctor)";
-        cmd.Parameters.AddWithValue("@Date", $"\'{prescription.Date}\'");
-        cmd.Parameters.AddWithValue("@DueDate", $"\'{prescription.DueDate}\'");
+        cmd.Parameters.AddWithValue("@Date", prescription.Date);
+        cmd.Parameters.AddWithValue("@DueDate", prescription.DueDate);
         cmd.Parameters.AddWithValue("@IdPatient", prescription.IdPatient);
         cmd.Parameters.AddWithValue("@IdDoctor", prescription.IdDoctor);
 
@@ -77,7 +78,7 @@ public class PrescriptionRepository : IPrescriptionRepository
         await using var cmd = new SqlCommand();
         cmd.Connection = con;
         if (!_tables.Contains(table)) return null;
-        cmd.CommandText = $"select LastName from {table} where IdDoctor = @id";
+        cmd.CommandText = $"select LastName from {table} where Id{table} = @id";
         cmd.Parameters.AddWithValue("@id", id);
 
         var dr = await cmd.ExecuteReaderAsync();
