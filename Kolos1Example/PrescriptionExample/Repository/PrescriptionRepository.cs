@@ -1,16 +1,31 @@
 ﻿using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using PrescriptionExample.Model;
 
 namespace PrescriptionExample.Repository;
 
-public class PrescriptionRepository(IConfiguration configuration) : IPrescriptionRepository {
-    public async Task<IEnumerable<PrescriptionView>> GetPrescriptionsWithLastNamesAsync(string? name) {
-        await using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+public class PrescriptionRepository : IPrescriptionRepository
+{
+    private IConfiguration _configuration;
+
+    private string[] _tablesDefult = { "Doctor", "Patient" };
+
+    private readonly List<string> _tables;
+
+    public PrescriptionRepository(IConfiguration configuration)
+    {
+        _configuration = configuration;
+        _tables = new List<string>(_tablesDefult);
+    }
+
+    public async Task<IEnumerable<PrescriptionView>> GetPrescriptionsWithLastNamesAsync(string? name)
+    {
+        await using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
         await con.OpenAsync();
 
         await using var cmd = new SqlCommand();
         cmd.Connection = con;
-        cmd.CommandText = "SELECT IdPrescription, Date, DueDate, P.LastName, D.LastName FROM Prescription " +
+        cmd.CommandText = "SELECT IdPrescription, Date, DueDate, P.LastName as PatientLastName, D.LastName as DoctorLastName FROM Prescription " +
                           "LEFT JOIN s27049.Patient P on P.IdPatient = Prescription.IdPatient " +
                           "LEFT JOIN s27049.Doctor D on D.IdDoctor = Prescription.IdDoctor " +
                           (string.IsNullOrEmpty(name) ? "" : "WHERE D.LastName = @Name ") +
@@ -20,12 +35,14 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
 
         var dr = await cmd.ExecuteReaderAsync();
         var prescriptions = new List<PrescriptionView>();
-        while (await dr.ReadAsync()) {
-            var prescription = new PrescriptionView {
+        while (await dr.ReadAsync())
+        {
+            var prescription = new PrescriptionView
+            {
                 Date = dr["Date"].ToString(),
                 DueDate = dr["DueDate"].ToString(),
-                PatientLastName = dr["P.LastName"].ToString(),
-                DoctorLastName = dr["D.LastName"].ToString()
+                PatientLastName = dr["PatientLastName"].ToString(),
+                DoctorLastName = dr["DoctorLastName"].ToString()
             };
             prescriptions.Add(prescription);
         }
@@ -33,8 +50,9 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
         return prescriptions;
     }
 
-    public async Task<int> CreatePrescriptionAsync(Prescription prescription) {
-        await using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+    public async Task<int> CreatePrescriptionAsync(Prescription prescription)
+    {
+        await using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
         await con.OpenAsync();
 
         await using var cmd = new SqlCommand();
@@ -50,10 +68,10 @@ public class PrescriptionRepository(IConfiguration configuration) : IPrescriptio
         return affectedCount;
     }
 
-    private readonly string[] _tables = ["Doctor", "Patient"];
 
-    public async Task<string?> GetLastNameAsync(int id, string table) {
-        await using var con = new SqlConnection(configuration["ConnectionStrings:DefaultConnection"]);
+    public async Task<string?> GetLastNameAsync(int id, string table)
+    {
+        await using var con = new SqlConnection(_configuration["ConnectionStrings:DefaultConnection"]);
         await con.OpenAsync();
 
         await using var cmd = new SqlCommand();
